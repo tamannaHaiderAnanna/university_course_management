@@ -1,0 +1,28 @@
+﻿@using UniversityCourseManagementSystem.Models
+@{
+    ViewBag.Title = "title";
+}
+
+<div class="all-content-wrapper">
+    <div class="card">
+        <u>
+            <h4>View All Departments</h4><br/><br/></u>
+        <table id="viewDepartment" class="table">
+            <thead bgcolor="GRAY">
+            <tr>
+                <td>Code</td>
+                <td>Name</td>
+            </tr>
+            </thead>
+            <thead>
+                @foreach (Department aDepartment in ViewBag.Departments)
+                {
+                    <tr>
+                        <td>@aDepartment.DeptCode</td>
+                        <td>@aDepartment.DeptName</td>
+                    </tr>
+                }
+            </thead>
+        </table>
+    </div>
+</div>

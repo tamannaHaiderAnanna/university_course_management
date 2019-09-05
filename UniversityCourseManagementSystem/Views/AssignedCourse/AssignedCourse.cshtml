@@ -1,0 +1,230 @@
+﻿@using UniversityCourseManagementSystem.Models
+
+
+@{
+    ViewBag.Title = "title";
+}
+@section styles
+{
+    <style>
+        label.error {
+            color: red;
+        }
+    </style>
+    <link href="~/Content/SweetAlert/sweetalert2.css" rel="stylesheet" />
+}
+
+<div class="all-content-wrapper">
+    <div class="card">
+        <u><h4>Course Assign To Teacher</h4><br /><br /></u>
+        <form id="assignedCourseForm" method="POST">
+            <div class="form-group row">
+                <label for="DepartmentId" class="col-sm-2 col-form-label col-form-label-sm">Department</label>
+                <div class="col-sm-10">
+                    <select class="form-control form-control-sm" id="DepartmentId" name="DepartmentId">
+                        <option value="">---Select---</option>
+                        @foreach (Department department in ViewBag.Departments)
+                        {
+                            <option value="@department.Id">@department.DeptName</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="TeacherId" class="col-sm-2 col-form-label col-form-label-sm">Teacher</label>
+                <div class="col-sm-10">
+                    <select class="form-control form-control-sm" id="TeacherId" name="TeacherId">
+                        <option value="">---Select---</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="CreditToBeTaken" class="col-sm-2 col-form-label col-form-label-sm">Credit To Be Taken</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control form-control-sm" id="CreditToBeTaken" name="CreditToBeTaken" readonly="readonly" placeholder="Credit">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="RemainingCredit" class="col-sm-2 col-form-label col-form-label-sm">Remaining Credit</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control form-control-sm" id="RemainingCredit" name="RemainingCredit" readonly="readonly" placeholder="Credit">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="CourseId" class="col-sm-2 col-form-label col-form-label-sm">Course</label>
+                <div class="col-sm-10">
+                    <select class="form-control form-control-sm" id="CourseId" name="CourseId">
+                        <option value="">---Select---</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="CourseName" class="col-sm-2 col-form-label col-form-label-sm">Course Name</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control form-control-sm" id="CourseName" name="CourseName" readonly="readonly" placeholder="Course Name">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="Credit" class="col-sm-2 col-form-label col-form-label-sm">Credit</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control form-control-sm" id="Credit" name="Credit" readonly="readonly" placeholder="Credit">
+                </div>
+            </div>
+            <input type="submit" id="Assign" class="btn btn-primary" value="Assign"/>
+            <div class="form-group">
+                <b><i><label for="Massage">@ViewBag.Message</label></i></b>
+            </div>
+        </form>
+    </div>
+</div>
+ @section scripts
+ {
+     <script src="~/Scripts/jquery.validate.min.js"></script>
+     <script src="~/Content/SweetAlert/sweetalert2.js"></script>
+     <script>
+         $(function() {
+             $("#DepartmentId").change(function() {
+                 $("#TeacherId").empty();
+                 $("#TeacherId").append('<option value="">---Select---</option>');
+
+                 var deptId = $("#DepartmentId").val();
+                 var json = { DepartmentId: deptId }
+                 $.ajax
+                 ({
+                     type: "POST",
+                     url: "/AssignedCourse/GetTeacherByDepartmentId",
+                     contentType: 'application/json',
+                     data: JSON.stringify(json),
+                     success: function(response) {
+                         $.each(response, function(key, value) {
+                             $("#TeacherId").append('<option value="' + value.Id + '">' + value.Name + '</option>');
+                         });
+                     }
+                 });
+
+             });
+         });
+     </script>
+     <script>
+         $(function() {
+             $("#DepartmentId").change(function() {
+                 $("#CourseId").empty();
+                 $("#CourseId").append('<option value="">---Select---</option>');
+
+                 var deptId = $("#DepartmentId").val();
+                 var json = { DepartmentId: deptId }
+                 $.ajax
+                 ({
+                     type: "POST",
+                     url: "/AssignedCourse/GetCourseByDepartmentId",
+                     contentType: 'application/json',
+                     data: JSON.stringify(json),
+                     success: function(response) {
+                         $.each(response, function(key, value) {
+                             $("#CourseId").append('<option value="' + value.Id + '">' + value.CourseCode + '</option>');
+                         });
+                     }
+                 });
+
+             });
+         });
+     </script>
+     <script>
+         $(function() {
+             $("#TeacherId").change(function() {
+                 $("#CreditToBeTaken").empty();
+                 $("#RemainingCredit").empty();
+
+                 var teacherId = $("#TeacherId").val();
+                 var json = { TeacherId: teacherId }
+                 $.ajax
+                 ({
+                     type: "POST",
+                     url: "/AssignedCourse/GetCreditToBeTaken",
+                     contentType: 'application/json',
+                     data: JSON.stringify(json),
+                     success: function(response) {
+
+                         $("#CreditToBeTaken").val(response.CreditToBeTaken);
+                         $("#RemainingCredit").val(response.RemainingCredit);
+
+                     }
+                 });
+
+             });
+         });
+     </script>
+     <script>
+         $(function() {
+             $("#CourseId").change(function() {
+                 $("#CourseName").empty();
+                 $("#Credit").empty();
+
+                 var courseId = $("#CourseId").val();
+                 var json = { courseId: courseId }
+                 $.ajax
+                 ({
+                     type: "POST",
+                     url: "/AssignedCourse/GetCourseNameAndCredit",
+                     contentType: 'application/json',
+                     data: JSON.stringify(json),
+                     success: function(response) {
+
+                         $("#CourseName").val(response.CourseName);
+                         $("#Credit").val(response.Credit);
+
+                     }
+                 });
+
+             });
+         });
+     </script>
+     <script>
+         $("#assignedCourseForm").validate({
+             rules: {
+                 DepartmentId: "required",
+                 TeacherId: "required",
+                 CourseId: "required",
+             },
+             messages: {
+                 DepartmentId: "Please select a department",
+                 TeacherId: "Please select teacher name",
+                 CourseId: "Please select a course code"
+             }
+         });
+     </script>
+     <script>
+         $(function() {
+             $("#Assign").click(function(e) {
+                 e.preventDefault();
+                 var remainingCredit = $("#RemainingCredit").val();
+                 var creditToBeTaken = $("#CreditToBeTaken").val();
+                 var credit = $("#Credit").val();
+                 if ((remainingCredit - credit) < 0) {
+                     Swal.fire({
+                         title: 'Do you want to assign any course?',
+                         text: "You won't be able to revert this!",
+                         type: 'warning',
+                         showCancelButton: true,
+                         confirmButtonColor: '#3085d6',
+                         cancelButtonColor: '#d33',
+                         confirmButtonText: 'Yes!'
+                     }).then((result) => {
+                         if (result.value) {
+                             $("#assignedCourseForm").submit();
+                             Swal.fire(
+                                 'Assigned!',
+                                 'Course assigned successfully',
+                                 'success'
+                             );
+                         }
+                     });
+                 } else {
+                     $("#assignedCourseForm").submit();
+                 }
+             });
+         });
+     </script>
+ }
+
+

@@ -1,0 +1,70 @@
+﻿@using UniversityCourseManagementSystem.Models
+
+
+@{
+    ViewBag.Title = "title";
+    Student aStudent = ViewBag.Student;
+    Department aDepartment = ViewBag.Department;
+}
+@section styles{
+}
+
+<div align="center">
+    <fieldset>
+        <legend>
+            <h2>Student Registration Information</h2>
+        </legend>
+        <font size="30" face="Arial">
+            <table>
+                <tr>
+                    <td><label>Name</label></td>
+                    <td><label>@aStudent.Name</label></td>
+                </tr>
+                <tr>
+                    <td><label>Email</label></td>
+                    <td><label>@aStudent.Email</label></td>
+                </tr>
+                <tr>
+                    <td><label>Contact No</label></td>
+                    <td><label>@aStudent.ContactNo</label></td>
+                </tr>
+                <tr>
+                    <td><label>Date </label></td>
+                    <td><label>@aStudent.Date</label></td>
+                </tr>
+                <tr>
+                    <td><label>Address </label></td>
+                    <td><label>@aStudent.Address</label></td>
+                </tr>
+                <tr>
+                    <td><label>Department </label></td>
+                    <td><label>@aDepartment.DeptName</label></td>
+                </tr>
+                <tr>
+                    <td><label>Registration Number</label></td>
+                    <td><label>@aStudent.RegistrationNo</label></td>
+                </tr>
+                <tr>
+                    <td><label>Gender</label></td>
+                    <td><label>@aStudent.Gender</label></td>
+                </tr>
+                <tr>
+                    <td><label>Session</label></td>
+                    <td><label>@aStudent.SessionName</label></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td><b><i><label>@ViewBag.Message</label></i></b></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>@Html.ActionLink("Back", "Student", "Student")</td>
+                </tr>
+            </table>
+        </font>
+    </fieldset>
+</div>
+@section scripts
+{
+    
+}

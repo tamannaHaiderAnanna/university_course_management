@@ -1,0 +1,102 @@
+﻿@model UniversityCourseManagementSystem.Models.Student
+@{
+    ViewBag.Title = "title";
+}
+
+@section styles
+{
+    <style>
+        .field-validation-error {
+            color: red;
+        }
+
+        .input-validation-error {
+            border: 1px red solid;
+        }
+    </style>
+    <link href="~/Scripts/jquery-ui-1.12.1.custom/jquery-ui.css" rel="stylesheet" />
+
+}
+<div class="all-content-wrapper">
+    <div class="card">
+        <u>
+            <h4>Register Student</h4><br/><br/></u>
+        @using (Html.BeginForm())
+        {
+            <div class="form-group row">
+                @Html.LabelFor(n => n.Name, htmlAttributes: new { @class = "col-form-label col-md-2" })
+                <div class="col-md-10">
+                    @Html.TextBoxFor(n => n.Name, new { htmlAttributes = new { @class = "form-control" } })
+                    @Html.ValidationMessageFor(n => n.Name, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <div class="form-group row">
+                @Html.LabelFor(e => e.Email, htmlAttributes: new { @class = "col-form-label col-md-2" })
+                <div class="col-md-10">
+                    @Html.TextBoxFor(e => e.Email, new { htmlAttributes = new { @class = "form-control" } })
+                    @Html.ValidationMessageFor(e => e.Email, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <div class="form-group row">
+                @Html.LabelFor(c => c.ContactNo, htmlAttributes: new { @class = "col-form-label col-md-2" })
+                <div class="col-md-10">
+                    @Html.TextBoxFor(c => c.ContactNo, new { htmlAttributes = new { @class = "form-control" } })
+                    @Html.ValidationMessageFor(c => c.ContactNo, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <div class="form-group row">
+                @Html.LabelFor(d => d.Date, htmlAttributes: new { @class = "col-form-label col-md-2" })
+                <div class="col-md-10">
+                    @Html.TextBoxFor(d => d.Date, new { htmlAttributes = new { @class = "form-control" } })
+                    @Html.ValidationMessageFor(d => d.Date, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <div class="form-group row">
+                @Html.LabelFor(ad => ad.Address, htmlAttributes: new { @class = "col-form-label col-md-2" })
+                <div class="col-md-10">
+                    @Html.TextAreaFor(ad => ad.Address, new { htmlAttributes = new { @class = "form-control" } })
+                    @Html.ValidationMessageFor(ad => ad.Address, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <div class="form-group row">
+                @Html.LabelFor(dp => dp.DepartmentId, htmlAttributes: new {@class = "col-form-label col-md-2"})
+                <div class="col-md-10">
+                    @Html.DropDownListFor(dp => dp.DepartmentId, new SelectList(ViewBag.Departments, "Value", "Text"), new {@class = "form-control"})
+                    @Html.ValidationMessageFor(dp => dp.DepartmentId, "", new {@class = "text-danger"})
+                </div>
+            </div>
+            <div class="form-group row">
+                @Html.LabelFor(m => m.Gender, htmlAttributes: new {@class = "col-form-label col-md-2"})
+                <div class="col-md-10">
+                    @Html.RadioButtonFor(x => x.Gender, "Male", new {htmlAttributes = new {@class = "form-control"}}) Male
+                    @Html.RadioButtonFor(x => x.Gender, "Female", new {htmlAttributes = new {@class = "form-control"}}) Female
+
+                    @Html.ValidationMessageFor(m => m.Gender, "", new {@class = "text-danger"})
+                </div>
+            </div>
+            <div class="form-group row">
+                @Html.LabelFor(dp => dp.SessionName, htmlAttributes: new {@class = "col-form-label col-md-2"})
+                <div class="col-md-10">
+                    @Html.DropDownListFor(dp => dp.SessionName, new SelectList(ViewBag.Sessions, "Value", "Text"), new {@class = "form-control"})
+                    @Html.ValidationMessageFor(dp => dp.SessionName, "", new {@class = "text-danger"})
+                </div>
+            </div>
+            <div>
+                <input type="submit" id="Register" class="btn btn-primary" value="Register" />
+            </div>
+            
+        }
+    </div>
+</div>
+    @section scripts
+{
+        <script src="~/Scripts/jquery.validate.js"></script>
+        <script src="~/Scripts/jquery.validate.unobtrusive.js"></script>
+        <script src="~/Scripts/jquery-ui-1.12.1.custom/jquery-ui.min.js"></script>
+        <script>
+            $(function () {
+                $("#Date").datepicker();
+            });
+        </script>
+    }
+

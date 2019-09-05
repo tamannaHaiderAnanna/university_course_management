@@ -1,0 +1,136 @@
+﻿@using UniversityCourseManagementSystem.Models
+
+
+@{
+    ViewBag.Title = "title";
+}
+@section styles
+{
+    <style>
+        label.error {
+            color: red;
+        }
+    </style>
+    <link href="~/Scripts/jquery-ui-1.12.1.custom/jquery-ui.css" rel="stylesheet" />
+}
+<div class="all-content-wrapper">
+    <div class="card">
+        <h4>
+            <u>View Result</u>
+        </h4><br/><br/>
+        <form id="viewResultForm" method="POST">
+            <div class="form-group row">
+                <label for="StudentId" class="col-sm-2 col-form-label col-form-label-sm">Student Reg. No.</label>
+                <div class="col-sm-10">
+                    <select class="form-control form-control-sm" id="StudentId" name="StudentId">
+                        <option value="">---Select---</option>
+                        @foreach (Student student in ViewBag.RegistrationNo)
+                        {
+                            <option value="@student.Id">@student.RegistrationNo</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="StudentName" class="col-sm-2 col-form-label col-form-label-sm">Student Name</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control form-control-sm" id="StudentName" name="StudentName" readonly="readonly" placeholder="Student Name">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="Email" class="col-sm-2 col-form-label col-form-label-sm">Email</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control form-control-sm" id="Email" name="Email" readonly="readonly" placeholder="Email">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="DeptName" class="col-sm-2 col-form-label col-form-label-sm">Department</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control form-control-sm" id="DeptName" name="DeptName" readonly="readonly" placeholder="Department">
+                    <input type="hidden" class="form-control form-control-sm" readonly="readonly" id="DepartmentId" name="DepartmentId"/>
+                </div>
+            </div>
+            <input type="submit" class="btn btn-primary" value="Make a PDF"/>
+        </form>
+        <br/><br/>
+        <table id="viewResult" class="table">
+            <thead bgcolor="GRAY">
+            <tr>
+                <td>Course Code</td>
+                <td>Name</td>
+                <td>Grade</td>
+            </tr>
+            </thead>
+            <tbody id="viewResultBody"></tbody>
+        </table>
+    </div>
+</div>
+
+    @section scripts
+{
+<script src="~/Scripts/jquery.validate.js"></script>
+        <script>
+            $(function () {
+                $("#StudentId").change(function () {
+                    $("#StudentName").empty();
+                    $("#Email").empty();
+                    $("#DeptName").empty();
+                    $("#DepartmentId").empty();
+
+                    var studentId = $("#StudentId").val();
+                    var json = { StudentId: studentId }
+                    $.ajax
+                    ({
+                        type: "POST",
+                        url: "/ViewResult/GetStudentInfoWithDeptName",
+                        contentType: 'application/json',
+                        data: JSON.stringify(json),
+                        success: function (response) {
+                            $("#StudentName").val(response.StudentName);
+                            $("#Email").val(response.Email);
+                            $("#DeptName").val(response.DeptName);
+                            $("#DepartmentId").val(response.DepartmentId);
+                        }
+                    });
+
+                });
+            });
+        </script>
+
+        <script>
+            $(function() {
+
+                $("#viewResult").hide();
+
+                $("#StudentId").change(function() {
+                    $("#viewResult").show();
+                    var studentId = $("#StudentId").val();
+                    var json = { StudentId: studentId }
+                    $.ajax({
+                        type: "POST",
+                        url: "/ViewResult/GetStudentResult",
+                        contentType: 'application/json',
+                        data: JSON.stringify(json),
+                        success: function(response) {
+                            $("#viewResultBody tr").remove();
+                            $.each(response, function(key, value) {
+                                $("#viewResultBody").append('<tr><td>' + value.CourseCode + '</td><td>' + value.CourseName + '</td><td>' + value.GradeName + '</td></tr>');
+                            });
+                        }
+                    });
+
+                });
+            });
+        </script>
+        <script>
+            $("#viewResultForm").validate({
+                rules: {
+                    StudentId: "required"
+                },
+                messages: {
+                    StudentId: "Please select registration number"
+                }
+            });
+        </script>
+
+    }
