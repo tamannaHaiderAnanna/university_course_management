@@ -1,0 +1,158 @@
+﻿@using UniversityCourseManagementSystem.Models
+
+
+@{
+    ViewBag.Title = "title";
+}
+
+@section styles
+{
+    <style>
+        label.error {
+            color: red;
+        }
+    </style>
+}
+<div class="all-content-wrapper">
+    <div class="card">
+        <u>
+            <h4>Save Teacher</h4><br /><br />
+        </u>
+    <div>
+        <form class="form-horizontal" id="saveForm" method="POST">
+
+            <div class="form-group">
+                <label for="Name" class="col-sm-2 control-label">Name</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="Name" name="Name" placeholder="Name">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="Address" class="col-sm-2 control-label">Address</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="Address" name="Address" placeholder="Address">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="Email" class="col-sm-2 control-label">Email</label>
+                <div class="col-sm-10">
+                    <input type="email" class="form-control" id="Email" name="Email" placeholder="Email">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="ContactNo" class="col-sm-2 control-label">Contact No</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="ContactNo" name="ContactNo" placeholder="Contact No">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="DesignationId" class="col-sm-2 control-label">Designation</label>
+                <div class="col-sm-10">
+                    <select class="form-control" name="DesignationId" id="DesignationId">
+                        <option value="">Select Designation</option>
+                        @foreach (Designation designation in ViewBag.Designation)
+                        {
+                            <option value="@designation.Id">@designation.Name</option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+
+            <div class="form-group">
+                <label for="DepartmentId" class="col-sm-2 control-label">Department</label>
+                <div class="col-sm-10">
+                    <select class="form-control" name="DepartmentId" id="DepartmentId">
+                        <option value="">Select Department</option>
+                        @foreach (Department department in ViewBag.Departments)
+                        {
+                            <option value="@department.Id">@department.DeptName</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="CreditToBeTaken" class="col-sm-2 control-label">Credit To Be Taken </label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="CreditToBeTaken" name="CreditToBeTaken" placeholder="Credit To Be Taken ">
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-10">
+                    <input type="submit" class="btn btn-primary" value="Save" />
+                </div>
+            </div>
+           
+            <div class="form-group">
+                <b><i><label for="Massage">@ViewBag.Message</label></i></b>
+            </div>
+        </form>
+    </div>
+    </div>
+</div>
+@section scripts
+{
+    <script src="~/Scripts/jquery.validate.js"></script>
+    <script>
+        $(function() {
+            $("#saveForm").validate({
+                rules: {
+                    Name: "required",
+
+                    Address: "required",
+
+                    Email: {
+                        required: true,
+                        email: true
+                    },
+                    ContactNo: {
+                        required: true,
+                        number: true
+                    },
+
+                    DesignationId: "required",
+
+                    DepartmentId: "required",
+
+                    CreditToBeTaken: {
+                        required:true,
+                        min: 1
+                    }
+
+                },
+                messages: {
+                    Name: "Please enter name",
+
+                    Address: "Please enter address",
+
+                    Email: {
+                        required: "Please enter email",
+                        email: "Enter a valid email"
+                    },
+                    ContactNo: {
+                        required: "Please enter Contact No",
+                        number: "Enter only number"
+                    },
+
+                    DesignationId: "Please select designation",
+
+                    DepartmentId: "Please select department",
+
+                    CreditToBeTaken: {
+                        required: "Please enter credit",
+                        min:"Enter non-negetive number"
+                    }
+
+                }
+            });
+
+        });
+
+    </script>
+
+
+}
