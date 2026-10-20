@@ -13,74 +13,90 @@ namespace UniversityCourseManagementSystem.Gateway
     public class AssignedCourseGateway : BaseGateway
     {
        TeacherManager aTeacherManager = new TeacherManager();
-        public bool IsCourseExists(AssignedCourse assignedCourse)
+
+        // Assigns the course to the teacher and takes the course's credit off the teacher's remaining
+        // credit, all in one transaction. Returns false if the course is already assigned.
+        public bool Assign(AssignedCourse assignedCourse)
         {
-
-            string query = "SELECT * FROM AssignedCourse WHERE CourseId = '" + assignedCourse.CourseId + "' ";
-
-            Command = new SqlCommand(query, Connection);
-
             Connection.Open();
-
-            Reader = Command.ExecuteReader();
-
-            bool hasRow = false;
-
-            if (Reader.HasRows)
+            SqlTransaction transaction = Connection.BeginTransaction();
+            try
             {
-                hasRow = true;
+                // UPDLOCK + HOLDLOCK keep this course's row (or the gap where it would go) locked until the
+                // commit, so two people assigning the same course at the same moment can't both succeed.
+                string query = "SELECT Status FROM AssignedCourse WITH (UPDLOCK, HOLDLOCK) WHERE CourseId = @courseId";
+
+                Command = new SqlCommand(query, Connection, transaction);
+
+                Command.Parameters.Clear();
+                Command.Parameters.Add("courseId", SqlDbType.Int);
+                Command.Parameters["courseId"].Value = assignedCourse.CourseId;
+
+                object status = Command.ExecuteScalar();
+                bool rowExists = status != null;
+                bool alreadyAssigned = rowExists && status != DBNull.Value && (bool)status;
+
+                if (alreadyAssigned)
+                {
+                    RollbackAndClose(transaction);
+                    return false;
+                }
+
+                if (rowExists)
+                {
+                    // Released earlier by "Unassign All Courses": give it to the new teacher.
+                    query = "UPDATE AssignedCourse SET DepartmentId = @departmentId, TeacherId = @teacherId, Status = @status WHERE CourseId = @courseId";
+                }
+                else
+                {
+                    query = "INSERT INTO AssignedCourse VALUES(@departmentId,@teacherId,@courseId,@status)";
+                }
+
+                Command = new SqlCommand(query, Connection, transaction);
+
+                Command.Parameters.Clear();
+                Command.Parameters.Add("departmentId", SqlDbType.Int);
+                Command.Parameters["departmentId"].Value = assignedCourse.DepartmentId;
+
+                Command.Parameters.Add("teacherId", SqlDbType.Int);
+                Command.Parameters["teacherId"].Value = assignedCourse.TeacherId;
+
+                Command.Parameters.Add("courseId", SqlDbType.Int);
+                Command.Parameters["courseId"].Value = assignedCourse.CourseId;
+
+                Command.Parameters.Add("status", SqlDbType.Bit);
+                Command.Parameters["status"].Value = true;
+
+                Command.ExecuteNonQuery();
+
+                // Subtract inside the database, using the credit stored for the course, instead of writing back
+                // a number the page showed earlier: two assignments for the same teacher at the same time then
+                // both count, and the credit can't be changed from the browser.
+                query = "UPDATE Teacher SET RemainingCredit = RemainingCredit - (SELECT Credit FROM Course WHERE Id = @courseId) WHERE Id = @teacherId";
+
+                Command = new SqlCommand(query, Connection, transaction);
+
+                Command.Parameters.Clear();
+                Command.Parameters.Add("courseId", SqlDbType.Int);
+                Command.Parameters["courseId"].Value = assignedCourse.CourseId;
+
+                Command.Parameters.Add("teacherId", SqlDbType.Int);
+                Command.Parameters["teacherId"].Value = assignedCourse.TeacherId;
+
+                Command.ExecuteNonQuery();
+
+                transaction.Commit();
+                Connection.Close();
+
+                return true;
             }
-
-            Reader.Close();
-            Connection.Close();
-
-            return hasRow;
+            catch
+            {
+                RollbackAndClose(transaction);
+                throw;
+            }
         }
-        public int Save(AssignedCourse assignedCourse)
-        {
 
-            string query = "INSERT INTO AssignedCourse VALUES(@departmentId,@teacherId,@courseId,@status)";
-
-            Command = new SqlCommand(query, Connection);
-
-            Command.Parameters.Clear();
-            Command.Parameters.Add("departmentId", SqlDbType.Int);
-            Command.Parameters["departmentId"].Value = assignedCourse.DepartmentId;
-
-            Command.Parameters.Add("teacherId", SqlDbType.Int);
-            Command.Parameters["teacherId"].Value = assignedCourse.TeacherId;
-
-            Command.Parameters.Add("courseId", SqlDbType.Int);
-            Command.Parameters["courseId"].Value = assignedCourse.CourseId;
-
-            Command.Parameters.Add("status", SqlDbType.Bit);
-            Command.Parameters["status"].Value = assignedCourse.Status;
-
-            Connection.Open();
-
-            int rowAffected = Command.ExecuteNonQuery();
-
-            Connection.Close();
-
-            return rowAffected;
-        }
-        public int Update(AssignedCourse assignedCourse)
-        {
-
-            string query =
-                "UPDATE Teacher SET RemainingCredit = " + assignedCourse.RemainingCredit + " - " + assignedCourse.Credit + "  WHERE Id = '" + assignedCourse.TeacherId + "'";
-
-            Command = new SqlCommand(query, Connection);
-
-            Connection.Open();
-
-            var rowAffected = Command.ExecuteNonQuery();
-
-            Connection.Close();
-
-            return rowAffected;
-
-        }
         public List<ViewCourseModel> GetAllCoursesWithSemesterAndStatus(int departmentId)
         {
             string query = "SELECT * FROM GetAllCoursesWithSemesterAndStatus WHERE Id = '" + departmentId + "'";
@@ -146,37 +162,6 @@ namespace UniversityCourseManagementSystem.Gateway
            
             return rowAffected;
         }
-        public bool CheckStatus(AssignedCourse assignedCourse)
-        {
-            string query = "SELECT * FROM AssignedCourse WHERE CourseId = '" + assignedCourse.CourseId + "' ";
-
-            Command = new SqlCommand(query, Connection);
-
-            Connection.Open();
-
-            Reader = Command.ExecuteReader();
-
-            ViewCourseModel aCourseModel = null;
-            bool hasRow = false;
-
-            while ( Reader.Read())
-            {
-                aCourseModel = new ViewCourseModel();
-                aCourseModel.Status = Reader["Status"].ToString();
-                if (aCourseModel.Status == "True")
-                {
-                    hasRow = true;
-                    break;
-                }
-              
-            }
-
-            Reader.Close();
-            Connection.Close();
-
-            return hasRow;
-        }
-
         //public bool CheckCourseAndTeacher(AssignedCourse assignedCourse)
         //{
         //    string query = "SELECT * FROM AssignedCourse WHERE CourseId = '" + assignedCourse.CourseId + "'";
@@ -208,17 +193,5 @@ namespace UniversityCourseManagementSystem.Gateway
 
         //    return hasRow;
         //}
-
-        public int UpdateStatus(AssignedCourse assignedCourse)
-        {
-            string query = "UPDATE AssignedCourse SET Status= '" + true + "',TeacherId = '" + assignedCourse.TeacherId + "',DepartmentId='"+assignedCourse.DepartmentId+"' WHERE CourseId= '" + assignedCourse.CourseId + "' ";
-            Command = new SqlCommand(query, Connection);
-            Connection.Open();
-
-            int rowAffected = Command.ExecuteNonQuery();
-            Connection.Close();
-
-            return rowAffected;
-        }
     }
 }

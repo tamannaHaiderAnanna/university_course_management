@@ -15,33 +15,11 @@ namespace UniversityCourseManagementSystem.Manager
         //TeacherManager aTeacherManager = new TeacherManager();
         public string Save(AssignedCourse assignedCourse)
         {
-            if ((aAssignedCourseGateway.IsCourseExists(assignedCourse)) && (aAssignedCourseGateway.CheckStatus(assignedCourse)))
+            if (aAssignedCourseGateway.Assign(assignedCourse))
             {
-                return "This course is already assigned";
+                return "Course assingn successful";
             }
-            if ((aAssignedCourseGateway.IsCourseExists(assignedCourse)) && (aAssignedCourseGateway.CheckStatus(assignedCourse) == false))
-            {
-                assignedCourse.Status = true;
-                int rowAffected = aAssignedCourseGateway.UpdateStatus(assignedCourse);
-                var rowAffected1 = aAssignedCourseGateway.Update(assignedCourse);
-                if (rowAffected > 0)
-                {
-                    return "Course update successfully";
-                }
-                return "Updating Failed";
-            }
-            else
-            {
-                assignedCourse.Status = true;
-                int rowAffected = aAssignedCourseGateway.Save(assignedCourse);
-                var rowAffected1 = aAssignedCourseGateway.Update(assignedCourse);
-                if (rowAffected > 0)
-                {
-                    return "Course assingn successful";
-                }
-                return "Save failed";
-            }
-
+            return "This course is already assigned";
         }
 
         //public decimal Update(AssignedCourse assignedCourse)
