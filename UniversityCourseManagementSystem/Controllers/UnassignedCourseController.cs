@@ -20,7 +20,6 @@ namespace UniversityCourseManagementSystem.Controllers
         public ActionResult UnassignedCourse(Course aCourse)
         {
 
-            ViewBag.Update = aCourseManager.UpdateCredit();
             ViewBag.Message = aCourseManager.UnassignedCourses();
             return View();
         }

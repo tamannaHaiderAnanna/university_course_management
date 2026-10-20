@@ -4,7 +4,6 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Web;
-using UniversityCourseManagementSystem.Manager;
 using UniversityCourseManagementSystem.Models;
 using UniversityCourseManagementSystem.Models.ViewModels;
 
@@ -12,8 +11,6 @@ namespace UniversityCourseManagementSystem.Gateway
 {
     public class AssignedCourseGateway : BaseGateway
     {
-       TeacherManager aTeacherManager = new TeacherManager();
-
         // Assigns the course to the teacher and takes the course's credit off the teacher's remaining
         // credit, all in one transaction. Returns false if the course is already assigned.
         public bool Assign(AssignedCourse assignedCourse)
@@ -131,36 +128,34 @@ namespace UniversityCourseManagementSystem.Gateway
             return courses;
         }
 
-        public int UnassignedCourses()
+        // Releases every course and gives every teacher back their full credit, in one transaction:
+        // either both happen or neither does.
+        public int UnassignAllCourses()
         {
-            string query = "UPDATE AssignedCourse SET status=@status";
-            Command = new SqlCommand(query, Connection);
-
-            Command.Parameters.AddWithValue("@status", "false");
             Connection.Open();
-
-            int rowAffected = Command.ExecuteNonQuery();
-            Connection.Close();
-
-            return rowAffected;
-        }
-
-        public int UpdateRemainingCredit()
-        {
-            var credits = aTeacherManager.GetAllTeachers();
-            int rowAffected = 0;
-            foreach (var credit in credits)
+            SqlTransaction transaction = Connection.BeginTransaction();
+            try
             {
-                string query = "UPDATE Teacher SET RemainingCredit = '" + credit.CreditToBeTaken + "' WHERE Id = '" + credit.Id + "'";
-                Command = new SqlCommand(query, Connection);
-                Connection.Open();
+                string query = "UPDATE Teacher SET RemainingCredit = CreditToBeTaken";
 
-                rowAffected = Command.ExecuteNonQuery();
+                Command = new SqlCommand(query, Connection, transaction);
+                Command.ExecuteNonQuery();
+
+                query = "UPDATE AssignedCourse SET Status = 0";
+
+                Command = new SqlCommand(query, Connection, transaction);
+                int rowAffected = Command.ExecuteNonQuery();
+
+                transaction.Commit();
                 Connection.Close();
-            }
 
-           
-            return rowAffected;
+                return rowAffected;
+            }
+            catch
+            {
+                RollbackAndClose(transaction);
+                throw;
+            }
         }
         //public bool CheckCourseAndTeacher(AssignedCourse assignedCourse)
         //{

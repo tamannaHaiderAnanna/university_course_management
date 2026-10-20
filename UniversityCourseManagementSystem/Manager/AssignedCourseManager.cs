@@ -50,21 +50,11 @@ namespace UniversityCourseManagementSystem.Manager
 
         public string UnassignedCourses()
         {
-            if (aAssignedCourseGateway.UnassignedCourses() > 0)
+            if (aAssignedCourseGateway.UnassignAllCourses() > 0)
             {
                 return "All courses unssign successfully";
             }
             return "Unassigning Failed";
-        }
-
-        public string UpdateCredit()
-        {
-            int rowAffected = aAssignedCourseGateway.UpdateRemainingCredit();
-            if (rowAffected > 0)
-            {
-                return "Update Successful";
-            }
-            return "Updating Failed";
         }
     }
 }
