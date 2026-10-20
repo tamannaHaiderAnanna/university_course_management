@@ -60,27 +60,32 @@ The original 2019 Git repository was not kept. The 2019 history here was rebuilt
 | Room clash check | A free slot was refused because of a booking in another room on another day. Times were compared as text, so 12:00–12:30 PM was accepted in a room already booked 11:00 AM–01:00 PM. A booking that ended before it started was accepted. 20 simultaneous requests for one slot saved 17 bookings. | It checks the same room, the same day and overlapping times (compared as times, not text), requires the end to be after the start, and checks and saves in one locked transaction. |
 | SQL injection | A name with an apostrophe, such as Women's Studies, crashed the page. The department code `'OR''='` was reported as already taken. | Parameters in every query. |
 
+4. Preparation for running it online:
+   - The dropdowns and tables that are filled by AJAX now insert names as text. Before, a course or teacher name containing HTML ran as code in the visitor's browser (7 of the 8 such lists and tables, in a browser test).
+   - A `Web.config` that runs with LocalDB and holds no passwords, because the 2019 one was not kept.
+   - The project now targets .NET Framework 4.8 instead of 4.5.
+   - [`Database/DemoData.sql`](Database/DemoData.sql): demo data with made-up names. It can be run again at any time to reset the data.
+
 Known limitations I have not fixed:
 
 - There is no login, so every page is open to anyone.
 - Form rules (required fields, lengths) are only checked in the browser, not on the server.
 - The other "does this already exist?" checks (department, course, teacher and student emails, enrolment, results) are still separate check-then-save steps, so two simultaneous requests could still create a duplicate.
-- The AJAX tables insert text into the page as HTML.
 - Dates are read in the server's format (month/day/year on an en-US server).
 - Some theme icons don't show, because the theme's CSS points to a fonts folder that doesn't exist.
 
 ## Running it
 
-You need Windows, Visual Studio 2017 or newer with ASP.NET, and SQL Server 2017 or newer (LocalDB is enough).
+You need Windows, Visual Studio 2019 or newer with ASP.NET (it includes .NET Framework 4.8), and SQL Server 2017 or newer (LocalDB is enough).
 
-1. Create the database and run the script:
+1. Create the database, add the tables, and optionally add the demo data:
 
    ```
    sqlcmd -S "(localdb)\MSSQLLocalDB" -Q "CREATE DATABASE UniversityCourseManagement"
    sqlcmd -S "(localdb)\MSSQLLocalDB" -d UniversityCourseManagement -i Database\UniversityCourseManagement.sql
+   sqlcmd -S "(localdb)\MSSQLLocalDB" -d UniversityCourseManagement -i Database\DemoData.sql
    ```
 
-2. In `UniversityCourseManagementSystem/Web.config`, point the `UniversityManagementConnectionString` connection string at that database, for example `Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=UniversityCourseManagement;Integrated Security=True`.
-3. Open `UniversityCourseManagementSystem.sln`, let Visual Studio restore the NuGet packages, and run it with IIS Express. The project targets .NET Framework 4.5; if that targeting pack isn't installed, retarget the project to 4.8 or build with `msbuild -p:TargetFrameworkVersion=v4.8`.
+2. Open `UniversityCourseManagementSystem.sln`, let Visual Studio restore the NuGet packages, and run it with IIS Express. `Web.config` already points at that LocalDB database. For another server, change the `UniversityManagementConnectionString` connection string there.
 
-The script adds the semesters, designations, grades and rooms. Everything else is added through the pages.
+The first script adds the semesters, designations, grades and rooms; without the demo data, everything else is added through the pages.
