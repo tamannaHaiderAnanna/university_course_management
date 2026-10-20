@@ -9,3 +9,8 @@ packages/
 .vs/
 *.suo
 *.user
+
+# Publish profiles and downloaded publish settings can hold passwords
+PublishProfiles/
+*.pubxml
+*.publishsettings
