@@ -114,7 +114,8 @@
                         success: function(response) {
                             $("#viewResultBody tr").remove();
                             $.each(response, function(key, value) {
-                                $("#viewResultBody").append('<tr><td>' + value.CourseCode + '</td><td>' + value.CourseName + '</td><td>' + value.GradeName + '</td></tr>');
+                                $("#viewResultBody").append($('<tr>').append($('<td>').text(value.CourseCode), $('<td>').text(value.CourseName),
+                                    $('<td>').text(value.GradeName)));
                             });
                         }
                     });

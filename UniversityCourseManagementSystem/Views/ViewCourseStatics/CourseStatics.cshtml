@@ -55,7 +55,8 @@
                         success: function (response) {
                             $("#viewCourseBody tr").remove();
                             $.each(response, function (key, value) {
-                                $("#viewCourseBody").append('<tr><td>' + value.CourseCode + '</td><td>' + value.CourseName + '</td><td>' + value.Semester + '</td><td>' + value.AssignedStatus + '</td></tr>');
+                                $("#viewCourseBody").append($('<tr>').append($('<td>').text(value.CourseCode), $('<td>').text(value.CourseName),
+                                    $('<td>').text(value.Semester), $('<td>').text(value.AssignedStatus)));
                             });
                         }
                     });

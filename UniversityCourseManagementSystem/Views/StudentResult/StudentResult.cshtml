@@ -126,7 +126,7 @@
                         data: JSON.stringify(json),
                         success: function(response) {
                             $.each(response, function(key, value) {
-                                $("#CourseId").append('<option value="' + value.CourseId + '">' + value.CourseName + '</option>');
+                                $("#CourseId").append($('<option>').val(value.CourseId).text(value.CourseName));
                             });
                         }
                     });

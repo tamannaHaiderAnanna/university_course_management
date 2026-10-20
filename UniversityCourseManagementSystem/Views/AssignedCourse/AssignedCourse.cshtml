@@ -97,7 +97,7 @@
                      data: JSON.stringify(json),
                      success: function(response) {
                          $.each(response, function(key, value) {
-                             $("#TeacherId").append('<option value="' + value.Id + '">' + value.Name + '</option>');
+                             $("#TeacherId").append($('<option>').val(value.Id).text(value.Name));
                          });
                      }
                  });
@@ -121,7 +121,7 @@
                      data: JSON.stringify(json),
                      success: function(response) {
                          $.each(response, function(key, value) {
-                             $("#CourseId").append('<option value="' + value.Id + '">' + value.CourseCode + '</option>');
+                             $("#CourseId").append($('<option>').val(value.Id).text(value.CourseCode));
                          });
                      }
                  });
