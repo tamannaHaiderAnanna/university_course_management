@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Web;
@@ -11,8 +12,11 @@ namespace UniversityCourseManagementSystem.Gateway
     {
         public List<ViewResultModel> GetStudentResult(int studentId)
         {
-            string query = "SELECT * FROM GetStudentResult WHERE StudentId = '" + studentId + "'";
+            string query = "SELECT * FROM GetStudentResult WHERE StudentId = @studentId";
             Command = new SqlCommand(query, Connection);
+            Command.Parameters.Clear();
+            Command.Parameters.Add("studentId", SqlDbType.Int);
+            Command.Parameters["studentId"].Value = studentId;
             Connection.Open();
             Reader = Command.ExecuteReader();
 

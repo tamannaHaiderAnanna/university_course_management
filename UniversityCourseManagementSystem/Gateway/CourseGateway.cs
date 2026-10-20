@@ -74,9 +74,13 @@ namespace UniversityCourseManagementSystem.Gateway
         }
         public bool IsCodeExists(Course aCourse)
         {
-            string query = "SELECT * FROM Course WHERE CourseCode = '" + aCourse.CourseCode + "' ";
+            string query = "SELECT * FROM Course WHERE CourseCode = @code";
 
            Command = new SqlCommand(query, Connection);
+
+            Command.Parameters.Clear();
+            Command.Parameters.Add("code", SqlDbType.VarChar);
+            Command.Parameters["code"].Value = aCourse.CourseCode;
 
            Connection.Open();
 
@@ -97,9 +101,13 @@ namespace UniversityCourseManagementSystem.Gateway
         public bool IsNameExists(Course aCourse)
         {
            
-            string query = "SELECT * FROM Course WHERE CourseName = '" + aCourse.CourseName + "' ";
+            string query = "SELECT * FROM Course WHERE CourseName = @name";
 
             Command = new SqlCommand(query, Connection);
+
+            Command.Parameters.Clear();
+            Command.Parameters.Add("name", SqlDbType.VarChar);
+            Command.Parameters["name"].Value = aCourse.CourseName;
 
             Connection.Open();
 
@@ -119,8 +127,11 @@ namespace UniversityCourseManagementSystem.Gateway
         }
         public List<Course> GetAllCourses(int departmentId)
         {
-            string query = "SELECT * FROM Course WHERE DepartmentId = '"+ departmentId +"'";
+            string query = "SELECT * FROM Course WHERE DepartmentId = @departmentId";
             Command = new SqlCommand(query, Connection);
+            Command.Parameters.Clear();
+            Command.Parameters.Add("departmentId", SqlDbType.Int);
+            Command.Parameters["departmentId"].Value = departmentId;
             Connection.Open();
             Reader = Command.ExecuteReader();
 
@@ -145,9 +156,12 @@ namespace UniversityCourseManagementSystem.Gateway
         }
         public Course GetCourseNameAndCredit(int courseId)
         {
-            string query = "SELECT CourseName,Credit FROM Course WHERE Id = '" + courseId + "'";
+            string query = "SELECT CourseName,Credit FROM Course WHERE Id = @courseId";
 
             Command = new SqlCommand(query, Connection);
+            Command.Parameters.Clear();
+            Command.Parameters.Add("courseId", SqlDbType.Int);
+            Command.Parameters["courseId"].Value = courseId;
             Connection.Open();
             Reader = Command.ExecuteReader();
             Course course = null;

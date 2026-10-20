@@ -34,8 +34,11 @@ namespace UniversityCourseManagementSystem.Gateway
         }
         public List<ViewStudentModel> GetEnrolledCourses(int studentId)
         {
-            string query = "SELECT * FROM GetEnrolledCourses WHERE StudentId = '" + studentId + "'";
+            string query = "SELECT * FROM GetEnrolledCourses WHERE StudentId = @studentId";
             Command = new SqlCommand(query, Connection);
+            Command.Parameters.Clear();
+            Command.Parameters.Add("studentId", SqlDbType.Int);
+            Command.Parameters["studentId"].Value = studentId;
             Connection.Open();
             Reader = Command.ExecuteReader();
 
@@ -58,9 +61,16 @@ namespace UniversityCourseManagementSystem.Gateway
         public bool CheckResultOfSameCourseBySameStudent(StudentResult studentResult)
         {
 
-            string query = "SELECT * FROM Result WHERE CourseId = '" + studentResult.CourseId + "' AND StudentId = '" + studentResult.StudentId + "' ";
+            string query = "SELECT * FROM Result WHERE CourseId = @courseId AND StudentId = @studentId";
 
             Command = new SqlCommand(query, Connection);
+
+            Command.Parameters.Clear();
+            Command.Parameters.Add("courseId", SqlDbType.Int);
+            Command.Parameters["courseId"].Value = studentResult.CourseId;
+
+            Command.Parameters.Add("studentId", SqlDbType.Int);
+            Command.Parameters["studentId"].Value = studentResult.StudentId;
 
             Connection.Open();
 
@@ -111,9 +121,19 @@ namespace UniversityCourseManagementSystem.Gateway
         public int UpdateResult(StudentResult studentResult)
         {
             string query =
-                 "UPDATE Result SET GradeId = '"+ studentResult.GradeId +"'  WHERE StudentId = '" + studentResult.StudentId + "' AND CourseId = '"+ studentResult.CourseId +"'";
+                 "UPDATE Result SET GradeId = @gradeId WHERE StudentId = @studentId AND CourseId = @courseId";
 
             Command = new SqlCommand(query, Connection);
+
+            Command.Parameters.Clear();
+            Command.Parameters.Add("gradeId", SqlDbType.Int);
+            Command.Parameters["gradeId"].Value = studentResult.GradeId;
+
+            Command.Parameters.Add("studentId", SqlDbType.Int);
+            Command.Parameters["studentId"].Value = studentResult.StudentId;
+
+            Command.Parameters.Add("courseId", SqlDbType.Int);
+            Command.Parameters["courseId"].Value = studentResult.CourseId;
 
             Connection.Open();
 

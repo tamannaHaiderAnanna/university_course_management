@@ -96,8 +96,11 @@ namespace UniversityCourseManagementSystem.Gateway
 
         public List<ViewCourseModel> GetAllCoursesWithSemesterAndStatus(int departmentId)
         {
-            string query = "SELECT * FROM GetAllCoursesWithSemesterAndStatus WHERE Id = '" + departmentId + "'";
+            string query = "SELECT * FROM GetAllCoursesWithSemesterAndStatus WHERE Id = @departmentId";
             Command = new SqlCommand(query, Connection);
+            Command.Parameters.Clear();
+            Command.Parameters.Add("departmentId", SqlDbType.Int);
+            Command.Parameters["departmentId"].Value = departmentId;
             Connection.Open();
             Reader = Command.ExecuteReader();
 

@@ -13,9 +13,13 @@ namespace UniversityCourseManagementSystem.Gateway
         public bool IsEmailExists(Student aStudent)
         {
 
-            string query = "SELECT * FROM Student WHERE Email = '" + aStudent.Email + "' ";
+            string query = "SELECT * FROM Student WHERE Email = @email";
 
             Command = new SqlCommand(query, Connection);
+
+            Command.Parameters.Clear();
+            Command.Parameters.Add("email", SqlDbType.VarChar);
+            Command.Parameters["email"].Value = aStudent.Email;
 
             Connection.Open();
 
@@ -36,9 +40,13 @@ namespace UniversityCourseManagementSystem.Gateway
         public bool IsContactNoExists(Student aStudent)
         {
 
-            string query = "SELECT * FROM Student WHERE ContactNo = '" + aStudent.ContactNo + "' ";
+            string query = "SELECT * FROM Student WHERE ContactNo = @contactNo";
 
             Command = new SqlCommand(query, Connection);
+
+            Command.Parameters.Clear();
+            Command.Parameters.Add("contactNo", SqlDbType.VarChar);
+            Command.Parameters["contactNo"].Value = aStudent.ContactNo;
 
             Connection.Open();
 
@@ -139,8 +147,11 @@ namespace UniversityCourseManagementSystem.Gateway
 
         public Department GetDepartmentById(int departmentId)
         {
-            string query = "SELECT * FROM Department WHERE Id = '" + departmentId + "'";
+            string query = "SELECT * FROM Department WHERE Id = @departmentId";
             Command = new SqlCommand(query, Connection);
+            Command.Parameters.Clear();
+            Command.Parameters.Add("departmentId", SqlDbType.Int);
+            Command.Parameters["departmentId"].Value = departmentId;
             Connection.Open();
             Reader = Command.ExecuteReader();
 

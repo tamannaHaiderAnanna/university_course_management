@@ -36,8 +36,11 @@ namespace UniversityCourseManagementSystem.Gateway
 
         public ViewStudentModel GetStudentInfoWithDeptName(int studentId)
         {
-            string query = "SELECT * FROM GetStudentInfoWithDeptName WHERE Id = '"+ studentId +"'";
+            string query = "SELECT * FROM GetStudentInfoWithDeptName WHERE Id = @studentId";
             Command = new SqlCommand(query, Connection);
+            Command.Parameters.Clear();
+            Command.Parameters.Add("studentId", SqlDbType.Int);
+            Command.Parameters["studentId"].Value = studentId;
             Connection.Open();
             Reader = Command.ExecuteReader();
 
@@ -61,9 +64,16 @@ namespace UniversityCourseManagementSystem.Gateway
         public bool CheckIfEnrolledSameCourseBySamestudent(RegisteredCourse aRegisteredCourse)
         {
 
-            string query = "SELECT * FROM EnrolledCourses WHERE CourseId = '" + aRegisteredCourse.CourseId + "' AND StudentId = '"+ aRegisteredCourse.StudentId +"' ";
+            string query = "SELECT * FROM EnrolledCourses WHERE CourseId = @courseId AND StudentId = @studentId";
 
             Command = new SqlCommand(query, Connection);
+
+            Command.Parameters.Clear();
+            Command.Parameters.Add("courseId", SqlDbType.Int);
+            Command.Parameters["courseId"].Value = aRegisteredCourse.CourseId;
+
+            Command.Parameters.Add("studentId", SqlDbType.Int);
+            Command.Parameters["studentId"].Value = aRegisteredCourse.StudentId;
 
             Connection.Open();
 
@@ -83,8 +93,11 @@ namespace UniversityCourseManagementSystem.Gateway
         }
         public List<ViewStudentModel> GetCourseName(int studentId)
         {
-            string query = "SELECT * FROM GetCourseName WHERE StudentId = '" + studentId + "'";
+            string query = "SELECT * FROM GetCourseName WHERE StudentId = @studentId";
             Command = new SqlCommand(query, Connection);
+            Command.Parameters.Clear();
+            Command.Parameters.Add("studentId", SqlDbType.Int);
+            Command.Parameters["studentId"].Value = studentId;
             Connection.Open();
             Reader = Command.ExecuteReader();
 

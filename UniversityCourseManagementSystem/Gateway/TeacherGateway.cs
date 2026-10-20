@@ -40,9 +40,13 @@ namespace UniversityCourseManagementSystem.Gateway
         public bool IsEmailExists(Teacher aTeacher)
         {
 
-            string query = "SELECT * FROM Teacher WHERE Email = '" + aTeacher.Email + "' ";
+            string query = "SELECT * FROM Teacher WHERE Email = @email";
 
             Command = new SqlCommand(query, Connection);
+
+            Command.Parameters.Clear();
+            Command.Parameters.Add("email", SqlDbType.VarChar);
+            Command.Parameters["email"].Value = aTeacher.Email;
 
             Connection.Open();
 
@@ -129,9 +133,12 @@ namespace UniversityCourseManagementSystem.Gateway
 
         public Teacher GetCreditToBeTaken(int teacherId)
         {
-            string query = "SELECT CreditToBeTaken,RemainingCredit FROM Teacher WHERE Id = '" + teacherId + "'";
+            string query = "SELECT CreditToBeTaken,RemainingCredit FROM Teacher WHERE Id = @teacherId";
 
             Command = new SqlCommand(query, Connection);
+            Command.Parameters.Clear();
+            Command.Parameters.Add("teacherId", SqlDbType.Int);
+            Command.Parameters["teacherId"].Value = teacherId;
             Connection.Open();
             Reader = Command.ExecuteReader();
             Teacher teacher = null;

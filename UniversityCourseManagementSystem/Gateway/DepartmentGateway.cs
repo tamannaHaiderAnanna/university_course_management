@@ -35,9 +35,13 @@ namespace UniversityCourseManagementSystem.Gateway
 
         public bool IsDeptCodeExist(Department aDepartment)
         {
-            string query = "SELECT * FROM Department WHERE DeptCode = '" + aDepartment.DeptCode + "' ";
+            string query = "SELECT * FROM Department WHERE DeptCode = @code";
 
             Command = new SqlCommand(query, Connection);
+
+            Command.Parameters.Clear();
+            Command.Parameters.Add("code", SqlDbType.VarChar);
+            Command.Parameters["code"].Value = aDepartment.DeptCode;
 
             Connection.Open();
 
@@ -58,9 +62,13 @@ namespace UniversityCourseManagementSystem.Gateway
 
         public bool IsDeptNameExist(Department aDepartment)
         {
-            string query = "SELECT * FROM Department WHERE DeptName = '" + aDepartment.DeptName + "' ";
+            string query = "SELECT * FROM Department WHERE DeptName = @name";
 
             Command = new SqlCommand(query, Connection);
+
+            Command.Parameters.Clear();
+            Command.Parameters.Add("name", SqlDbType.VarChar);
+            Command.Parameters["name"].Value = aDepartment.DeptName;
 
             Connection.Open();
 
