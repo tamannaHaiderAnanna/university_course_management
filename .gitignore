@@ -1,0 +1,11 @@
+# Build output
+bin/
+obj/
+
+# NuGet packages (Visual Studio restores them from packages.config)
+packages/
+
+# Visual Studio user settings
+.vs/
+*.suo
+*.user
