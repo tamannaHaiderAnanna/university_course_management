@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Web;
 using System.Web.Services.Description;
@@ -17,32 +18,26 @@ namespace UniversityCourseManagementSystem.Manager
 
         public string Save(AllocatedClassroom aClassroom)
         {
-            //aClassroom.Status = true;
-            if ((allocatedClassroomGateway.CheckRoomAndDay(aClassroom)) && (allocatedClassroomGateway.CheckTimeSchedule(aClassroom)))
+            // The time picker sends 12-hour times such as "01:00 PM", so compare them as times, not as text
+            // (as text, "01:00 PM" comes before "12:00 PM").
+            DateTime fromTime;
+            DateTime toTime;
+            if (!DateTime.TryParse(aClassroom.FromTime, CultureInfo.InvariantCulture, DateTimeStyles.None, out fromTime) ||
+                !DateTime.TryParse(aClassroom.ToTime, CultureInfo.InvariantCulture, DateTimeStyles.None, out toTime))
             {
-               
-                    return "This room is already allocated"; 
+                return "Please enter a valid time";
             }
-            //if ((allocatedClassroomGateway.CheckRoomAndDay(aClassroom)) && (allocatedClassroomGateway.CheckTimeSchedule(aClassroom) == false) && (allocatedClassroomGateway.CheckSameCourseAndDepartment(aClassroom)))
-            //{
-            //    int rowAffected = allocatedClassroomGateway.UpdateStatus(aClassroom);
-            //    int rowAffected1 = allocatedClassroomGateway.UpdateSameCourse(aClassroom);
-            //    if (rowAffected > 0 || rowAffected1 > 0)
-            //    {
-            //        return "Course Update successfully";
-            //    }
-            //    return "Updating Failed";
-            //}
-            else
+            if (fromTime.TimeOfDay >= toTime.TimeOfDay)
             {
-                aClassroom.Status = true;
-                int rowAffected = allocatedClassroomGateway.Save(aClassroom);
-                if (rowAffected > 0)
-                {
-                    return "Room allocated successfully";
-                }
-                return "Allocating failed";
+                return "From time must be earlier than to time";
             }
+
+            aClassroom.Status = true;
+            if (allocatedClassroomGateway.SaveIfRoomFree(aClassroom, fromTime.TimeOfDay, toTime.TimeOfDay))
+            {
+                return "Room allocated successfully";
+            }
+            return "This room is already allocated";
         }
         public List<AllocatedClassroom> GetAllRooms()
         {

@@ -41,97 +41,82 @@ namespace UniversityCourseManagementSystem.Gateway
             };
             return days;
         }
-        public int Save(AllocatedClassroom aClassroom)
+        // Saves the booking only if the room is free on that day for the whole time, in one transaction.
+        // Returns false (and saves nothing) if it overlaps a booking already made for that room and day.
+        public bool SaveIfRoomFree(AllocatedClassroom aClassroom, TimeSpan fromTime, TimeSpan toTime)
         {
-
-            string query = "INSERT INTO AllocatedRooms VALUES(@departmentId,@courseId,@roomId,@day,@startTime,@finishTime,@status)";
-
-            Command = new SqlCommand(query, Connection);
-
-            Command.Parameters.Clear();
-            Command.Parameters.Add("departmentId", SqlDbType.Int);
-            Command.Parameters["departmentId"].Value = aClassroom.DepartmentId;
-
-            Command.Parameters.Add("courseId", SqlDbType.Int);
-            Command.Parameters["courseId"].Value = aClassroom.CourseId;
-
-            Command.Parameters.Add("roomId", SqlDbType.Int);
-            Command.Parameters["roomId"].Value = aClassroom.RoomId;
-
-            Command.Parameters.Add("day", SqlDbType.VarChar);
-            Command.Parameters["day"].Value = aClassroom.Day;
-
-            Command.Parameters.Add("startTime", SqlDbType.VarChar);
-            Command.Parameters["startTime"].Value = aClassroom.FromTime;
-
-            Command.Parameters.Add("finishTime", SqlDbType.VarChar);
-            Command.Parameters["finishTime"].Value = aClassroom.ToTime;
-
-            Command.Parameters.Add("status", SqlDbType.Bit);
-            Command.Parameters["status"].Value = aClassroom.Status;
-
             Connection.Open();
-
-            int rowAffected = Command.ExecuteNonQuery();
-
-            Connection.Close();
-
-            return rowAffected;
-        }
-
-        public bool CheckRoomAndDay(AllocatedClassroom aClassroom)
-        {
-            string query = "SELECT * FROM AllocatedRooms WHERE Day = '" + aClassroom.Day + "' AND RoomId = '"+ aClassroom.RoomId +"' ";
-
-            Command = new SqlCommand(query, Connection);
-
-            Connection.Open();
-
-            Reader = Command.ExecuteReader();
-
-            bool hasRow = false;
-
-            if (Reader.HasRows)
+            SqlTransaction transaction = Connection.BeginTransaction();
+            try
             {
-                hasRow = true;
-            }
+                // Same room, same day, and the times overlap (each one starts before the other ends). Stored
+                // times are text as the page sent them, so they are turned into TIME before comparing.
+                // UPDLOCK + HOLDLOCK keep that room and day locked until the commit, so two people can't book
+                // the same slot at the same moment.
+                string query = "SELECT COUNT(*) FROM AllocatedRooms WITH (UPDLOCK, HOLDLOCK) " +
+                               "WHERE RoomId = @roomId AND Day = @day AND Status = 1 " +
+                               "AND TRY_CAST(StartTime AS TIME) < @toTime AND TRY_CAST(FinishTime AS TIME) > @fromTime";
 
-            Reader.Close();
-            Connection.Close();
+                Command = new SqlCommand(query, Connection, transaction);
 
-            return hasRow;
-        }
-        public bool CheckTimeSchedule(AllocatedClassroom aClassroom)
-        {
-            string query = "SELECT * FROM AllocatedRooms WHERE (StartTime > '"+ aClassroom.FromTime +"' AND FinishTime < '"+ aClassroom.ToTime +"') OR (StartTime < '"+ aClassroom.FromTime  +"' AND " +
-                           " FinishTime > '" + aClassroom.ToTime + "') OR (StartTime < '" + aClassroom.ToTime + "' AND " +
-                           " FinishTime > '" + aClassroom.FromTime + "') OR (StartTime > '" + aClassroom.ToTime + "' AND " +
-                           " FinishTime < '" + aClassroom.FromTime + "')";
+                Command.Parameters.Clear();
+                Command.Parameters.Add("roomId", SqlDbType.Int);
+                Command.Parameters["roomId"].Value = aClassroom.RoomId;
 
-            Command = new SqlCommand(query, Connection);
+                Command.Parameters.Add("day", SqlDbType.VarChar);
+                Command.Parameters["day"].Value = aClassroom.Day;
 
-            Connection.Open();
+                Command.Parameters.Add("fromTime", SqlDbType.Time);
+                Command.Parameters["fromTime"].Value = fromTime;
 
-            Reader = Command.ExecuteReader();
+                Command.Parameters.Add("toTime", SqlDbType.Time);
+                Command.Parameters["toTime"].Value = toTime;
 
-            ViewScheduleInfo scheduleInfo = null;
-            bool hasRow = false;
-
-            while (Reader.Read())
-            {
-                scheduleInfo = new ViewScheduleInfo();
-                scheduleInfo.Status = Reader["Status"].ToString();
-                if (scheduleInfo.Status == "True")
+                int overlapping = (int)Command.ExecuteScalar();
+                if (overlapping > 0)
                 {
-                    hasRow = true;
+                    RollbackAndClose(transaction);
+                    return false;
                 }
+
+                query = "INSERT INTO AllocatedRooms VALUES(@departmentId,@courseId,@roomId,@day,@startTime,@finishTime,@status)";
+
+                Command = new SqlCommand(query, Connection, transaction);
+
+                Command.Parameters.Clear();
+                Command.Parameters.Add("departmentId", SqlDbType.Int);
+                Command.Parameters["departmentId"].Value = aClassroom.DepartmentId;
+
+                Command.Parameters.Add("courseId", SqlDbType.Int);
+                Command.Parameters["courseId"].Value = aClassroom.CourseId;
+
+                Command.Parameters.Add("roomId", SqlDbType.Int);
+                Command.Parameters["roomId"].Value = aClassroom.RoomId;
+
+                Command.Parameters.Add("day", SqlDbType.VarChar);
+                Command.Parameters["day"].Value = aClassroom.Day;
+
+                Command.Parameters.Add("startTime", SqlDbType.VarChar);
+                Command.Parameters["startTime"].Value = aClassroom.FromTime;
+
+                Command.Parameters.Add("finishTime", SqlDbType.VarChar);
+                Command.Parameters["finishTime"].Value = aClassroom.ToTime;
+
+                Command.Parameters.Add("status", SqlDbType.Bit);
+                Command.Parameters["status"].Value = aClassroom.Status;
+
+                Command.ExecuteNonQuery();
+
+                transaction.Commit();
+                Connection.Close();
+
+                return true;
             }
-
-
-            Reader.Close();
-            Connection.Close();
-
-            return hasRow;
+            catch
+            {
+                RollbackAndClose(transaction);
+                throw;
+            }
         }
         public List<ViewScheduleInfo> GetAllInfo()
         {
@@ -177,43 +162,6 @@ namespace UniversityCourseManagementSystem.Gateway
             Connection.Close();
 
             return rowAffected;
-        }
-
-       
-        public bool CheckSameCourseAndDepartment(AllocatedClassroom aClassroom)
-        {
-            string query = "SELECT * FROM AllocatedRooms WHERE  (Day = '" + aClassroom.Day + "' AND RoomId = '" + aClassroom.RoomId + "') AND ((StartTime > '" + aClassroom.FromTime + "' AND FinishTime < '" + aClassroom.ToTime + "') OR (StartTime < '" + aClassroom.FromTime + "' AND " +
-                           " FinishTime > '" + aClassroom.ToTime + "') OR (StartTime < '" + aClassroom.ToTime + "' AND " +
-                           " FinishTime > '" + aClassroom.FromTime + "') OR (StartTime > '" + aClassroom.ToTime + "' AND " +
-                           " FinishTime < '" + aClassroom.FromTime + "')) ";
-
-            Command = new SqlCommand(query, Connection);
-
-            Connection.Open();
-
-            Reader = Command.ExecuteReader();
-
-            AllocatedClassroom allocatedClassroom = null;
-            bool hasRow = false;
-
-            if (Reader.HasRows)
-            {
-                allocatedClassroom = new AllocatedClassroom();
-                Reader.Read();
-
-                allocatedClassroom.CourseId = (int) Reader["CourseId"];
-                allocatedClassroom.DepartmentId = (int) Reader["DepartmentId"];
-                if (allocatedClassroom.CourseId == aClassroom.CourseId && allocatedClassroom.DepartmentId==aClassroom.DepartmentId)
-                {
-                    hasRow = true;
-                }
-               
-            }
-
-            Reader.Close();
-            Connection.Close();
-
-            return hasRow;
         }
 
         //public int UpdateStatus(AllocatedClassroom aClassroom)

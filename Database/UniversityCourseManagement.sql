@@ -81,7 +81,8 @@ CREATE TABLE AllocatedRooms (
     CourseId     INT NOT NULL CONSTRAINT FK_AllocatedRooms_Course REFERENCES Course (Id),
     RoomId       INT NOT NULL CONSTRAINT FK_AllocatedRooms_Room REFERENCES Room (Id),
     Day          VARCHAR(10) NOT NULL,
-    StartTime    VARCHAR(10) NOT NULL,   -- "HH:mm" (24-hour), so text order is time order
+    StartTime    VARCHAR(10) NOT NULL,   -- as the page's time picker sends it, e.g. "09:00 AM";
+                                         -- the clash check converts it to TIME (text order is not time order)
     FinishTime   VARCHAR(10) NOT NULL,
     Status       BIT NOT NULL
 );
