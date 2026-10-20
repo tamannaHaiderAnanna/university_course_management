@@ -10,7 +10,7 @@ namespace UniversityCourseManagementSystem.Manager
     public class StudentManager
     {
         StudentGateway aStudentGateway = new StudentGateway();
-        public string Save(Student aStudent)
+        public string Save(Student aStudent, string registrationPrefix)
         {
             if (aStudentGateway.IsEmailExists(aStudent) && aStudentGateway.IsContactNoExists(aStudent))
             {
@@ -26,7 +26,7 @@ namespace UniversityCourseManagementSystem.Manager
             }
             else
             {
-                int rowAffected = aStudentGateway.Save(aStudent);
+                int rowAffected = aStudentGateway.Save(aStudent, registrationPrefix);
                 if (rowAffected > 0)
                 {
                     return "Regitration complete";
@@ -34,11 +34,6 @@ namespace UniversityCourseManagementSystem.Manager
                 return "Registration failed";
             }
 
-        }
-
-        public List<Student> GetDepartmentId(Student student)
-        {
-            return aStudentGateway.GetDepartmentId(student);
         }
 
         public Department GetDepartmentById(int departmentId)

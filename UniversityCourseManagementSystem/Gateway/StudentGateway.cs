@@ -56,81 +56,85 @@ namespace UniversityCourseManagementSystem.Gateway
 
             return hasRow;
         }
-        public int Save(Student aStudent)
+        // Picks the next free registration number for this prefix and saves the student, in one
+        // transaction, so two students registered at the same moment can't get the same number.
+        public int Save(Student aStudent, string registrationPrefix)
         {
-
-            string query = "INSERT INTO Student VALUES(@name,@email,@contactNo,@date,@address,@departmentId,@registrationNo,@gender,@session)";
-
-            Command = new SqlCommand(query, Connection);
-
-            Command.Parameters.Clear();
-
-            Command.Parameters.Add("name", SqlDbType.VarChar);
-            Command.Parameters["name"].Value = aStudent.Name;
-
-            Command.Parameters.Add("email", SqlDbType.VarChar);
-            Command.Parameters["email"].Value = aStudent.Email;
-
-            Command.Parameters.Add("contactNo", SqlDbType.VarChar);
-            Command.Parameters["contactNo"].Value = aStudent.ContactNo;
-
-            Command.Parameters.Add("date", SqlDbType.Date);
-            Command.Parameters["date"].Value = aStudent.Date;
-
-            Command.Parameters.Add("address", SqlDbType.VarChar);
-            Command.Parameters["address"].Value = aStudent.Address;
-
-            Command.Parameters.Add("departmentId", SqlDbType.Int);
-            Command.Parameters["departmentId"].Value = aStudent.DepartmentId;
-
-            Command.Parameters.Add("registrationNo", SqlDbType.VarChar);
-            Command.Parameters["registrationNo"].Value = aStudent.RegistrationNo;
-
-            Command.Parameters.Add("gender", SqlDbType.VarChar);
-            Command.Parameters["gender"].Value = aStudent.Gender;
-
-            Command.Parameters.Add("session", SqlDbType.VarChar);
-            Command.Parameters["session"].Value = aStudent.SessionName;
-
             Connection.Open();
-
-            int rowAffected = Command.ExecuteNonQuery();
-
-            Connection.Close();
-
-            return rowAffected;
-        }
-
-        public List<Student> GetDepartmentId(Student student)
-        {
-           
-             string query = "SELECT * FROM Student WHERE DepartmentId = '" + student.DepartmentId + "' AND SUBSTRING(Date,1,4) ='" + student.Date.Substring(6, 4) + "'" +
-                           " AND Gender = '" + student.Gender + "' " +
-                           " AND Session = '" + student.SessionName + "' ";
-            
-            Command = new SqlCommand(query, Connection);
-            Connection.Open();
-            Reader = Command.ExecuteReader();
-
-            List<Student> students = new List<Student>();
-            while (Reader.Read())
+            SqlTransaction transaction = Connection.BeginTransaction();
+            try
             {
-                Student aStudent = new Student();
-                aStudent.Id = (int)Reader["Id"];
-                aStudent.Name = Reader["Name"].ToString();
-                aStudent.Email = Reader["Email"].ToString();
-                aStudent.ContactNo = Reader["ContactNo"].ToString();
-                aStudent.DepartmentId = (int)Reader["DepartmentId"];
-                aStudent.Address = Reader["Address"].ToString();
-                aStudent.RegistrationNo = Reader["RegistrationNumber"].ToString();
-                aStudent.Date = Reader["Date"].ToString();
+                // Highest serial already used with this prefix, in any department (departments can share a
+                // first letter, e.g. CSE and CE). UPDLOCK + HOLDLOCK keep other registrations waiting until
+                // this one is saved.
+                string query = "SELECT MAX(TRY_CAST(SUBSTRING(RegistrationNumber, @serialStart, 10) AS INT)) " +
+                               "FROM Student WITH (UPDLOCK, HOLDLOCK) WHERE LEFT(RegistrationNumber, @prefixLength) = @prefix";
 
-                students.Add(aStudent);
+                Command = new SqlCommand(query, Connection, transaction);
+
+                Command.Parameters.Clear();
+                Command.Parameters.Add("serialStart", SqlDbType.Int);
+                Command.Parameters["serialStart"].Value = registrationPrefix.Length + 1;
+
+                Command.Parameters.Add("prefixLength", SqlDbType.Int);
+                Command.Parameters["prefixLength"].Value = registrationPrefix.Length;
+
+                Command.Parameters.Add("prefix", SqlDbType.VarChar);
+                Command.Parameters["prefix"].Value = registrationPrefix;
+
+                object lastSerial = Command.ExecuteScalar();
+                int serial = 1;
+                if (lastSerial != DBNull.Value)
+                {
+                    serial = (int)lastSerial + 1;
+                }
+                aStudent.RegistrationNo = registrationPrefix + serial.ToString("D2");
+
+                query = "INSERT INTO Student VALUES(@name,@email,@contactNo,@date,@address,@departmentId,@registrationNo,@gender,@session)";
+
+                Command = new SqlCommand(query, Connection, transaction);
+
+                Command.Parameters.Clear();
+
+                Command.Parameters.Add("name", SqlDbType.VarChar);
+                Command.Parameters["name"].Value = aStudent.Name;
+
+                Command.Parameters.Add("email", SqlDbType.VarChar);
+                Command.Parameters["email"].Value = aStudent.Email;
+
+                Command.Parameters.Add("contactNo", SqlDbType.VarChar);
+                Command.Parameters["contactNo"].Value = aStudent.ContactNo;
+
+                Command.Parameters.Add("date", SqlDbType.Date);
+                Command.Parameters["date"].Value = aStudent.Date;
+
+                Command.Parameters.Add("address", SqlDbType.VarChar);
+                Command.Parameters["address"].Value = aStudent.Address;
+
+                Command.Parameters.Add("departmentId", SqlDbType.Int);
+                Command.Parameters["departmentId"].Value = aStudent.DepartmentId;
+
+                Command.Parameters.Add("registrationNo", SqlDbType.VarChar);
+                Command.Parameters["registrationNo"].Value = aStudent.RegistrationNo;
+
+                Command.Parameters.Add("gender", SqlDbType.VarChar);
+                Command.Parameters["gender"].Value = aStudent.Gender;
+
+                Command.Parameters.Add("session", SqlDbType.VarChar);
+                Command.Parameters["session"].Value = aStudent.SessionName;
+
+                int rowAffected = Command.ExecuteNonQuery();
+
+                transaction.Commit();
+                Connection.Close();
+
+                return rowAffected;
             }
-
-            Reader.Close();
-            Connection.Close();
-            return students;
+            catch
+            {
+                RollbackAndClose(transaction);
+                throw;
+            }
         }
 
         public Department GetDepartmentById(int departmentId)
